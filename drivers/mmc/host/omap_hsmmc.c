@@ -723,7 +723,6 @@ static int omap_hsmmc_context_restore(struct omap_hsmmc_host *host)
 		&& time_before(jiffies, timeout))
 		;
 
-	omap_hsmmc_disable_irq(host);
 
 	/* Do not initialize card-specific things if the power is off */
 	if (host->power_mode == MMC_POWER_OFF)
@@ -950,7 +949,6 @@ static void omap_hsmmc_request_done(struct omap_hsmmc_host *host, struct mmc_req
 	dma_ch = host->dma_ch;
 	spin_unlock(&host->irq_lock);
 
-	omap_hsmmc_disable_irq(host);
 	/* Do not complete the request if DMA is still in progress */
 	if (mrq->data && host->dma_type && dma_ch != -1)
 		return;
@@ -2486,7 +2484,6 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 		mmc_slot(host).mmc_data.card_present =
 			mmc_slot(host).mmc_data.status(mmc_dev(host->mmc));
 
-	omap_hsmmc_disable_irq(host);
 
 	mmc_host_lazy_disable(host->mmc);
 
@@ -2618,7 +2615,6 @@ static int omap_hsmmc_suspend(struct device *dev)
 		ret = mmc_suspend_host(host->mmc);
 		if (ret == 0) {
 			mmc_host_enable(host->mmc);
-			omap_hsmmc_disable_irq(host);
 			OMAP_HSMMC_WRITE(host->base, HCTL,
 				OMAP_HSMMC_READ(host->base, HCTL) & ~SDBP);
 			mmc_host_disable(host->mmc);
