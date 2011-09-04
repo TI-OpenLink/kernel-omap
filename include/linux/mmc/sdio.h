@@ -91,6 +91,7 @@
 
 #define SDIO_CCCR_IENx		0x04	/* Function/Master Interrupt Enable */
 #define SDIO_CCCR_INTx		0x05	/* Function Interrupt Pending */
+#define SDIO_CCCR_IEXx		0x16	/* Function Interrupt Extension */
 
 #define SDIO_CCCR_ABORT		0x06	/* function abort/card reset */
 

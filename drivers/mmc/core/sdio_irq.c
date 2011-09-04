@@ -252,6 +252,24 @@ int sdio_claim_irq(struct sdio_func *func, sdio_irq_handler_t *handler)
 	if (ret)
 		return ret;
 
+	if (func->card->host->caps & MMC_CAP_ASYNC_SDIO_IRQ) {
+		/* read Interrupt Extenstion */
+		ret = mmc_io_rw_direct(func->card, 0, 0,
+				       SDIO_CCCR_IEXx, 0, &reg);
+		if (ret)
+			return ret;
+
+		/* check Support Asynchronous Interrupt (SAI) */
+		if (reg & 0x1) {
+			/* Enable Asynchronous Interrupt */
+			reg |= BIT(1);
+			ret = mmc_io_rw_direct(func->card, 1, 0,
+					       SDIO_CCCR_IEXx, reg, NULL);
+			if (ret)
+				return ret;
+		}
+	}
+
 	func->irq_handler = handler;
 	ret = sdio_card_irq_get(func->card);
 	if (ret)
