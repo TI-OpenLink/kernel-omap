@@ -1912,7 +1912,7 @@ static void omap_hsmmc_init_card(struct mmc_host *mmc, struct mmc_card *card)
 static void omap_hsmmc_enable_sdio_irq(struct mmc_host *mmc, int enable)
 {
 	struct omap_hsmmc_host *host = mmc_priv(mmc);
-	u32 ie, con;
+	u32 ie, ise, con;
 	unsigned long flags;
 	host->inband_status = enable;
 	/*
@@ -1932,14 +1932,18 @@ static void omap_hsmmc_enable_sdio_irq(struct mmc_host *mmc, int enable)
 	pm_runtime_get_sync(host->dev);
 	con = OMAP_HSMMC_READ(host->base, CON) | CLKEXTFREE;
 	ie = OMAP_HSMMC_READ(host->base, IE);
+	ise = OMAP_HSMMC_READ(host->base, ISE);
 	if (enable) {
 		ie |= CIRQ_ENABLE;
+		ise |= CIRQ_ENABLE;
 		con |= CTPL;
 	} else {
 		ie &= ~CIRQ_ENABLE;
+		ise &= ~CIRQ_ENABLE;
 		con &= ~CTPL;
 		}
 	OMAP_HSMMC_WRITE(host->base, CON, con);
+	OMAP_HSMMC_WRITE(host->base, ISE, ise);
 	OMAP_HSMMC_WRITE(host->base, IE, ie);
 	OMAP_HSMMC_READ(host->base, IE); /* flush posted write */
 	pm_runtime_put_sync(host->dev);
