@@ -1158,12 +1158,27 @@ static void omap_hsmmc_do_irq(struct omap_hsmmc_host *host, int status)
 	struct mmc_data *data;
 	int end_cmd = 0, end_trans = 0;
 
+	/* Handle async inband interrupts even if no request is in progress */
+	if (status & CIRQ) {
+		if ((host->mmc->caps & MMC_CAP_ASYNC_SDIO_IRQ) ||
+		    host->mrq == NULL)
+			mmc_signal_sdio_irq(host->mmc);
+		else
+			dev_dbg(mmc_dev(host->mmc), "inband interrupt received"
+				" during data transfer\n");
+	}
+
+	/* Check if there are any interrupts we should handle */
+	if (!(status & INT_EN_MASK))
+		return;
+
 	if (!host->req_in_progress) {
 		do {
 			OMAP_HSMMC_WRITE(host->base, STAT, status);
 			/* Flush posted write */
 			status = OMAP_HSMMC_READ(host->base, STAT);
 		} while (status & INT_EN_MASK);
+
 		return;
 	}
 
@@ -1235,12 +1250,6 @@ static void omap_hsmmc_do_irq(struct omap_hsmmc_host *host, int status)
 			OMAP_HSMMC_READ(host->base, ADMA_SAL),
 			OMAP_HSMMC_READ(host->base, PSTATE));
 
-	}
-	if (status & CIRQ) {
-		if (host->mrq == NULL)
-			mmc_signal_sdio_irq(host->mmc);
-		else
-			dev_dbg(mmc_dev(host->mmc), "inband interrupt received during data transfer\n");
 	}
 
 	OMAP_HSMMC_WRITE(host->base, STAT, status);
