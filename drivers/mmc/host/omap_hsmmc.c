@@ -670,6 +670,9 @@ static void omap_hsmmc_enable_irq(struct omap_hsmmc_host *host,
 	if (cmd->opcode == MMC_ERASE)
 		irq_mask &= ~DTO_ENABLE;
 
+	if (host->inband_status)
+		irq_mask |= CIRQ_ENABLE;
+
 	OMAP_HSMMC_WRITE(host->base, STAT, STAT_CLEAR);
 	OMAP_HSMMC_WRITE(host->base, ISE, irq_mask);
 	OMAP_HSMMC_WRITE(host->base, IE, irq_mask);
