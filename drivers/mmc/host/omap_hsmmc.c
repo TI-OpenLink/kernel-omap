@@ -609,8 +609,23 @@ static int omap_hsmmc_gpio_init(struct omap_mmc_platform_data *pdata)
 	} else
 		pdata->slots[0].gpio_wp = -EINVAL;
 
+	if (gpio_is_valid(pdata->slots[0].gpio_dat1)) {
+		pdata->slots[0].dat1_irq =
+				gpio_to_irq(pdata->slots[0].gpio_dat1);
+		ret = gpio_request(pdata->slots[0].gpio_dat1, "mmc_dat1");
+		if (ret)
+			goto err_free_wp;
+		ret = gpio_direction_input(pdata->slots[0].gpio_dat1);
+		if (ret)
+			goto err_free_dat1;
+	} else {
+		pdata->slots[0].dat1_irq = -EINVAL;
+	}
+
 	return 0;
 
+err_free_dat1:
+	gpio_free(pdata->slots[0].gpio_dat1);
 err_free_wp:
 	gpio_free(pdata->slots[0].gpio_wp);
 err_free_cd:
@@ -626,6 +641,8 @@ static void omap_hsmmc_gpio_free(struct omap_mmc_platform_data *pdata)
 		gpio_free(pdata->slots[0].gpio_wp);
 	if (gpio_is_valid(pdata->slots[0].switch_pin))
 		gpio_free(pdata->slots[0].switch_pin);
+	if (gpio_is_valid(pdata->slots[0].gpio_dat1))
+		gpio_free(pdata->slots[0].gpio_dat1);
 }
 
 /*
@@ -1275,6 +1292,16 @@ static irqreturn_t omap_hsmmc_irq(int irq, void *dev_id)
 		/* Flush posted write */
 		status = OMAP_HSMMC_READ(host->base, STAT);
 	} while (status & INT_EN_MASK);
+
+	return IRQ_HANDLED;
+}
+
+static irqreturn_t omap_hsmmc_dat1_irq(int irq, void *dev_id)
+{
+	struct omap_hsmmc_host *host = dev_id;
+
+	disable_irq_nosync(mmc_slot(host).dat1_irq);
+	mmc_signal_sdio_irq(host->mmc);
 
 	return IRQ_HANDLED;
 }
@@ -2216,6 +2243,12 @@ static int omap_hsmmc_enable_simple(struct mmc_host *mmc)
 
 	pm_runtime_get_sync(host->dev);
 
+	if (host->mmc->caps & MMC_CAP_ASYNC_SDIO_IRQ) {
+		free_irq(mmc_slot(host).dat1_irq, host);
+		mmc_slot(host).remux_dat1(true);
+		enable_irq(host->irq);
+	}
+
 	dev_dbg(mmc_dev(host->mmc), "enabled\n");
 	return 0;
 }
@@ -2223,6 +2256,18 @@ static int omap_hsmmc_enable_simple(struct mmc_host *mmc)
 static int omap_hsmmc_disable_simple(struct mmc_host *mmc, int lazy)
 {
 	struct omap_hsmmc_host *host = mmc_priv(mmc);
+	int ret;
+
+	if (host->mmc->caps & MMC_CAP_ASYNC_SDIO_IRQ) {
+		disable_irq(host->irq);
+		mmc_slot(host).remux_dat1(false);
+		ret = request_threaded_irq(mmc_slot(host).dat1_irq,
+				  NULL, omap_hsmmc_dat1_irq,
+				  IRQF_TRIGGER_LOW | IRQF_ONESHOT,
+				  "sdio_irq", host);
+		if (ret)
+			dev_err(mmc_dev(host->mmc), "Could not request irq");
+	}
 
 	pm_runtime_put_sync(host->dev);
 

@@ -114,6 +114,9 @@ struct omap_mmc_platform_data {
 		int switch_pin;			/* gpio (card detect) */
 		int gpio_wp;			/* gpio (write protect) */
 
+		int gpio_dat1;			/* gpio (dat1) */
+		int dat1_irq;			/* irq (dat1) */
+
 		int (*set_bus_mode)(struct device *dev, int slot, int bus_mode);
 		int (*set_power)(struct device *dev, int slot,
 				 int power_on, int vdd);
@@ -121,6 +124,7 @@ struct omap_mmc_platform_data {
 		int (*set_sleep)(struct device *dev, int slot, int sleep,
 				 int vdd, int cardsleep);
 		void (*remux)(struct device *dev, int slot, int power_on);
+		void (*remux_dat1)(bool clocks_enabled);
 		/* Call back before enabling / disabling regulators */
 		void (*before_set_reg)(struct device *dev, int slot,
 				       int power_on, int vdd);

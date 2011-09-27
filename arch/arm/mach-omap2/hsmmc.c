@@ -300,8 +300,10 @@ static int __init omap_hsmmc_pdata_init(struct omap2_hsmmc_info *c,
 
 	mmc->slots[0].switch_pin = c->gpio_cd;
 	mmc->slots[0].gpio_wp = c->gpio_wp;
+	mmc->slots[0].gpio_dat1 = c->gpio_dat1;
 
 	mmc->slots[0].remux = c->remux;
+	mmc->slots[0].remux_dat1 = c->remux_dat1;
 	mmc->slots[0].init_card = c->init_card;
 
 	if (c->cover_only)
