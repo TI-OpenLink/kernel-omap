@@ -499,11 +499,14 @@ static void remux_mmc5_dat1(bool clocks_enabled)
 	}
 
 	val = __raw_readl(mux_base + 0x14C) & 0x0000FFFF;
-	if (clocks_enabled)
+	if (clocks_enabled) {
+		omap_mux_disable_wkup("sdmmc5_dat1");
 		val |= (OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP) << 16;
-	else
+	} else {
 		val |= (OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP |
 			OMAP_PIN_OFF_WAKEUPENABLE) << 16;
+		omap_mux_enable_wkup("sdmmc5_dat1");
+	}
 
 	__raw_writel(val, mux_base + 0x14C);
 
