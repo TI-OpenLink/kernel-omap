@@ -47,6 +47,7 @@ struct sdio_func {
 	struct mmc_card		*card;		/* the card this device belongs to */
 	struct device		dev;		/* the device */
 	sdio_irq_handler_t	*irq_handler;	/* IRQ callback */
+	sdio_irq_handler_t	*irq_handler_ll;/* IRQ callback, called with the host unclaimed */
 	unsigned int		num;		/* function number */
 
 	unsigned char		class;		/* standard interface class */
@@ -133,6 +134,8 @@ extern int sdio_disable_func(struct sdio_func *func);
 extern int sdio_set_block_size(struct sdio_func *func, unsigned blksz);
 
 extern int sdio_claim_irq(struct sdio_func *func, sdio_irq_handler_t *handler);
+extern int sdio_claim_irq_lockless(struct sdio_func *func,
+				   sdio_irq_handler_t *handler);
 extern int sdio_release_irq(struct sdio_func *func);
 extern int sdio_enable_irq(struct sdio_func *func);
 extern int sdio_disable_irq(struct sdio_func *func);
