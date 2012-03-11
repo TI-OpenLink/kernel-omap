@@ -746,7 +746,7 @@ int __pm_runtime_idle(struct device *dev, int rpmflags)
 	unsigned long flags;
 	int retval;
 
-	might_sleep_if(!(rpmflags & RPM_ASYNC));
+	might_sleep_if(!(rpmflags & RPM_ASYNC) && !dev->power.irq_safe);
 
 	if (rpmflags & RPM_GET_PUT) {
 		if (!atomic_dec_and_test(&dev->power.usage_count))
