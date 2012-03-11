@@ -2475,6 +2475,7 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 	host->dpm_state = DISABLED;
 
 	pm_runtime_enable(host->dev);
+	pm_runtime_irq_safe(host->dev);
 #ifndef CONFIG_PM_RUNTIME
 	/*
 	 * If runtime PM is not enabled, ensure clocks are always enabled.
