@@ -1303,6 +1303,10 @@ static irqreturn_t omap_hsmmc_dat1_irq(int irq, void *dev_id)
 {
 	struct omap_hsmmc_host *host = dev_id;
 
+	/* Avoid spurious interrupts */
+	if (gpio_get_value(mmc_slot(host).gpio_dat1))
+		return IRQ_HANDLED;
+
 	disable_irq_nosync(mmc_slot(host).dat1_irq);
 	mmc_signal_sdio_irq(host->mmc);
 
