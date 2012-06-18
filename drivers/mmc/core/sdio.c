@@ -115,9 +115,6 @@ static int sdio_read_cccr(struct mmc_card *card)
 
 	cccr_vsn = data & 0x0f;
 
-	printk(KERN_ERR "%s: CCCR structure version: %d\n",
-		mmc_hostname(card->host), cccr_vsn);
-
 	if (cccr_vsn > SDIO_CCCR_REV_2_00) {
 		printk(KERN_ERR "%s: unrecognised CCCR structure version %d\n",
 			mmc_hostname(card->host), cccr_vsn);

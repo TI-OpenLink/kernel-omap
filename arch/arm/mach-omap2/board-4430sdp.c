@@ -79,7 +79,6 @@
 
 #define GPIO_WIFI_PMENA		54
 #define GPIO_WIFI_IRQ		53
-#define GPIO_MMC5_DAT1		148
 #define OMAP_HDMI_HPD_ADDR	0x4A100098
 #define OMAP_HDMI_PULLTYPE_MASK	0x00000010
 
@@ -487,32 +486,6 @@ static struct omap_musb_board_data musb_board_data = {
 	.power			= 200,
 };
 
-static void remux_mmc5_dat1(bool clocks_enabled)
-{
-	void __iomem *mux_base = NULL;
-	u32 val;
-
-	mux_base = ioremap(0x4A100000, 0x1000);
-	if (!mux_base) {
-		pr_err("%s: Could not remap mux base", __func__);
-		return;
-	}
-
-	val = __raw_readl(mux_base + 0x14C) & 0x0000FFFF;
-	if (clocks_enabled) {
-		omap_mux_disable_wkup("sdmmc5_dat1");
-		val |= (OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP) << 16;
-	} else {
-		val |= (OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP |
-			OMAP_PIN_OFF_WAKEUPENABLE) << 16;
-		omap_mux_enable_wkup("sdmmc5_dat1");
-	}
-
-	__raw_writel(val, mux_base + 0x14C);
-
-	iounmap(mux_base);
-}
-
 static struct omap2_hsmmc_info mmc[] = {
 	{
 		.mmc		= 2,
@@ -520,7 +493,6 @@ static struct omap2_hsmmc_info mmc[] = {
 					MMC_CAP_1_8V_DDR,
 		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
-		.gpio_dat1	= -EINVAL,
 		.nonremovable   = true,
 		.ocr_mask	= MMC_VDD_29_30,
 		.no_off_init	= true,
@@ -530,18 +502,14 @@ static struct omap2_hsmmc_info mmc[] = {
 		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA |
 					MMC_CAP_1_8V_DDR,
 		.gpio_wp	= -EINVAL,
-		.gpio_dat1	= -EINVAL,
 	},
 	{
 		.mmc		= 5,
-		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_POWER_OFF_CARD |
-				  MMC_CAP_SDIO_IRQ | MMC_CAP_ASYNC_SDIO_IRQ,
+		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_POWER_OFF_CARD,
 		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
-		.gpio_dat1	= GPIO_MMC5_DAT1,
 		.ocr_mask	= MMC_VDD_165_195,
 		.nonremovable	= true,
-		.remux_dat1	= remux_mmc5_dat1,
 	},
 	{}	/* Terminator */
 };

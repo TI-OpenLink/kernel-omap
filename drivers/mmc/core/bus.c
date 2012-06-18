@@ -147,25 +147,15 @@ static int mmc_bus_pm_resume(struct device *dev)
 static int mmc_runtime_suspend(struct device *dev)
 {
 	struct mmc_card *card = mmc_dev_to_card(dev);
-	int ret;
 
-	mmc_claim_host(card->host);
-	ret = mmc_power_save_host(card->host);
-	mmc_release_host(card->host);
-
-	return ret;
+	return mmc_power_save_host(card->host);
 }
 
 static int mmc_runtime_resume(struct device *dev)
 {
 	struct mmc_card *card = mmc_dev_to_card(dev);
-	int ret;
 
-	mmc_claim_host(card->host);
-	ret = mmc_power_restore_host(card->host);
-	mmc_release_host(card->host);
-
-	return ret;
+	return mmc_power_restore_host(card->host);
 }
 
 static int mmc_runtime_idle(struct device *dev)
